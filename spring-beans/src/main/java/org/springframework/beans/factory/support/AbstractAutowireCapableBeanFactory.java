@@ -587,14 +587,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
-			//第四次调用后置处理器，判断是否需要AOP
+			//第四次调用后置处理器，判断是否需要AOP，若不需要AOP的逻辑，直接返回bean
+			//调用此方法放入singletonFactory,三级缓存会对应删除
+			//getEarlyBeanReference的作用：调用SmartInstantiationAwareBeanPostProcessor的getEarlyBeanReference
+			//否则啥都不做，也就是给调用者个机会，自己实现暴露这个bean的应用的逻辑~
+			//比如在getEarlyBeanReference()可以实现AOP的逻辑
+			// 参考自动代理创建器AbstractAutoProxyCreator  实现了这个方法来创建代理对象
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
-			//填充属性，也就是我们常常说的自动注入
+			//填充属性，也就是我们常常说的自动注入 @Autowired
 			//里面会完成第五次和第六次后置处理器的调用
 			populateBean(beanName, mbd, instanceWrapper);
 			//初始化Spring
